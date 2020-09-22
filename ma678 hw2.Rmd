@@ -6,8 +6,9 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-pyth = read.table("https://raw.githubusercontent.com/avehtari/ROS-Examples/master/Pyth/pyth.txt", header = TRUE)
+pyth = read.table("pyth.txt", header = TRUE)
 library(rstanarm)
+library(ggplot2)
 ```
 
 ## 11.5 
@@ -16,15 +17,41 @@ Residuals and predictions: The folder Pyth contains outcome y and predictors x1,
 ### (a) 
 Use R to fit a linear regression model predicting y from x1, x2, using the first 40 data points in the file. Summarize the inferences and check the fit of your model.
 
+A: The coefficients are:
+(Intercept)          x1          x2 
+  1.3271934   0.5131411   0.8068218 
+  
+The intercept says that with x1 and x2 being equal to zero the value of y will be
+1.3.  For each increase of 1 in x1 the average value of y will increase by 0.5 and
+for each increase of 1 in x2 the value of y will increase by 0.8.
+
+I did the LOO cross validation, but I'm not sure what it's coefficients are telling
+me ...
 ```{r}
 fit<-stan_glm(y~x1+x2, data=pyth[1:40,])
 coef(fit)
+loo(fit)
+
 ```
 
 ### (b) 
 Display the estimated model graphically as in Figure 10.2
 
+A: It appears that the model works better at predicting y using the x2 variable.
+
 ```{r}
+x1bar<-mean(pyth$x1[1:40])
+x2bar<-mean(pyth$x2[1:40])
+ggplot(pyth[1:40,], aes(pyth$x1[1:40],pyth$y[1:40]))+
+  geom_point()+
+  labs(x="x1", y="y1", title="Estimated model when x2=x2-bar")+
+  geom_abline(aes(intercept=fit$coefficients[1]+x2bar*fit$coefficients[3],
+                  slope=fit$coefficients[2]))
+ggplot(pyth[1:40,], aes(pyth$x2[1:40],pyth$y[1:40]))+
+  geom_point()+
+  labs(x="x2", y="y1", title="Estimated model when x1=x1-bar")+
+  geom_abline(aes(intercept=fit$coefficients[1]+x1bar*fit$coefficients[2],
+                  slope=fit$coefficients[3]))
 
 ```
 
